@@ -95,6 +95,21 @@ func (h *LabelEmbeddedHandler) handleFindResourceLabels(w http.ResponseWriter, r
 		h.api.Err(w, r, err)
 		return
 	}
+
+	// if the resource type is org, get all labels with this OrgID
+	if h.rt == influxdb.OrgsResourceType {
+		filter := influxdb.LabelFilter{
+			OrgID: embeddedID,
+		}
+		labels, err := h.labelSvc.FindLabels(ctx, filter)
+		if err != nil {
+			h.api.Err(w, r, err)
+			return
+		}
+		h.api.Respond(w, r, http.StatusOK, newLabelsResponse(labels))
+		return
+	}
+
 	filter := influxdb.LabelMappingFilter{
 		ResourceID:   *embeddedID,
 		ResourceType: h.rt,
